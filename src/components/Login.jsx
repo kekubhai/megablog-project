@@ -1,90 +1,86 @@
-import React, {useState} from 'react'
-import {Link, useNavigate} from 'react-router-dom'
-import {login as authLogin} from '../store/authSlice'
-import {Button , Input , Logo } from "./index"
-import { useDispatch  } from 'react-redux'
-import authService from "../appwrite/auth"
-import{useForm } from "react-hook-form"
-function Login () {
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { login as authLogin } from '../store/authSlice';
+import { Button, Input, Logo } from './index';
+import { useDispatch } from 'react-redux';
+import authService from '../appwrite/auth';
+import { useForm } from 'react-hook-form';
+import { useTranslation } from 'react-i18next'; // Add this import
 
-    const navigate =useNavigate()
-    const dispath = useDispatch()
-    const {register, handleSubmit}  = useForm()
-    const [error , setError] =useState("")
+function Login() {
+    const { t } = useTranslation(); // Initialize translation hook
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { register, handleSubmit, formState: { errors } } = useForm(); // Access errors
+    const [error, setError] = useState('');
 
-    const login =async(data)=> { 
-        setError("")
+    const login = async (data) => {
+        setError('');
         try {
-        const session =    await authService.login(data)
-       
-    if (session) {
-        const userData =await authService.getCurrentUser()
-    if (userData) {
-        dispath(authLogin(userData));
-        navigate("/")
-    }
-        
-    }
-   } catch (error) {
-          setError(error.message)  
+            const session = await authService.login(data);
+            if (session) {
+                const userData = await authService.getCurrentUser();
+                if (userData) {
+                    dispatch(authLogin(userData));
+                    navigate('/');
+                }
+            }
+        } catch (error) {
+            setError(error.message);
         }
-    }
+    };
 
-  return (
-   <div className='flex items-center justify-center w-full'
-   >
-    <div className={`mx-auto w-full max-w-lg bg-gray-100 rounded-xl p-10 border border-black/10`}>
-    <div className='mb-2 flex jusitfy-center'>
-<span className='inline-block w-full *:max-w-[100px]'>
-    <Logo 
-        width='100%'
-    />
-</span>
-    </div>
-    <h2>
-        Sign in to your account
-    </h2>
-    <p className='mt-2 text-center text-base text-black/60'>
-    Don&apos;t have any account?&nbsp;
-                    <Link
-                        to="/signup"
-                        className="font-medium text-primary transition-all duration-200 hover:underline"
-                    >
-                        Sign Up
+    return (
+        <div className="flex items-center justify-center min-h-screen bg-gray-100"> {/* Added min-h-screen */}
+            <div className="mx-auto w-full max-w-md bg-white rounded-lg shadow-lg p-8"> {/* Improved styling */}
+                <div className="mb-6 text-center">
+                    <Logo width="100px" /> {/* Adjusted width */}
+                    <h2 className="text-2xl font-bold mt-4">{t('login.title')}</h2> {/* Use translation */}
+                </div>
+                {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+                        <strong className="font-bold">{t('login.error')}</strong> {/* Use translation */}
+                        <span className="block sm:inline">{error}</span>
+                    </div>
+                )}
+                <form onSubmit={handleSubmit(login)} className="space-y-6">
+                    <Input
+                        label={t('login.email')} {/* Use translation */}
+                        placeholder={t('login.emailPlaceholder')} {/* Use translation */}
+                        type="email"
+                        {...register('email', {
+                            required: t('login.emailRequired'), {/* Use translation */}
+                            pattern: {
+                                value: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+                                message: t('login.emailInvalid'), {/* Use translation */}
+                            },
+                        })}
+                        error={errors.email} {/* Display error message */}
+                    />
+                    <Input
+                        label={t('login.password')} {/* Use translation */}
+                        placeholder={t('login.passwordPlaceholder')} {/* Use translation */}
+                        type="password"
+                        {...register('password', {
+                            required: t('login.passwordRequired'), {/* Use translation */}
+                        })}
+                        error={errors.password} {/* Display error message */}
+                    />
+                    <Button type="submit" className="w-full">{t('login.signIn')}</Button> {/* Use translation */}
+                </form>
+                <p className="text-center mt-4 text-gray-600">
+                    {t('login.noAccount')} {/* Use translation */}
+                    <Link to="/signup" className="text-blue-500 hover:underline">
+                        {t('login.signUp')} {/* Use translation */}
                     </Link>
-
-                    {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
-        <form onSubmit={handleSubmit(login)} className='mt-8'>
-            <div className='space-y-5'>
-                <Input
-                label="Email: "
-                placeholder="Enter your email"
-                type="email"
-                {...register("email", {
-                    required: true,
-                    validate: {
-                        matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                        "Email address must be a valid address",
-                    }
-                })}
-                />
-                <Input
-                label="Password: "
-                type="password"
-                placeholder="Enter your password"
-                {...register("password", {
-                    required: true,
-                })}
-                />
-                <Button
-                type="submit"
-                className="w-full"
-                >Sign in</Button>
+                </p>
             </div>
-        </form>
-    </p>
-    </div>
-   </div>
+        </div>
+    );
+}
+
+export default Login;
+
   )
 }
 
